@@ -1,0 +1,60 @@
+Internal Server Error: /api/submit/
+Internal Server Error: /api/submit/
+Internal Server Error: /api/submit/
+Internal Server Error: /api/results/
+Internal Server Error: /api/submit/
+Internal Server Error: /api/submit/
+Internal Server Error: /api/submit/
+Internal Server Error: /api/submit/
+Internal Server Error: /api/submit/
+Internal Server Error: /api/results/
+Internal Server Error: /api/submit/
+Internal Server Error: /api/submit/
+Internal Server Error: /api/submit/
+Internal Server Error: /api/submit/
+Internal Server Error: /api/results/
+Internal Server Error: /api/submit/
+Internal Server Error: /api/results/
+"GET /api/results/?session_id=test-session-123 HTTP/1.1" 500 38
+Internal Server Error: /api/submit/
+Internal Server Error: /api/submit/
+Internal Server Error: /api/submit/
+Internal Server Error: /api/results/
+Internal Server Error: /api/submit/
+Internal Server Error: /api/submit/
+Internal Server Error: /api/submit/
+Internal Server Error: /api/submit/
+Internal Server Error: /api/results/
+Internal Server Error: /api/submit/
+Internal Server Error: /api/submit/
+Internal Server Error: /api/submit/
+Internal Server Error: /api/submit/
+Internal Server Error: /api/results/
+Internal Server Error: /api/submit/
+Internal Server Error: /api/submit/
+Internal Server Error: /api/submit/
+Internal Server Error: /api/submit/
+Internal Server Error: /api/results/
+Internal Server Error: /api/submit/
+ERROR 2025-02-11 01:47:46,143 log Internal Server Error: /api/submit/
+ERROR 2025-02-11 01:48:23,143 views Error computing results: ['“test-session-123” is not a valid UUID.']
+ERROR 2025-02-11 01:48:23,143 log Internal Server Error: /api/results/
+ERROR 2025-02-11 01:49:10,058 views Error computing results: ['“test-session-123” is not a valid UUID.']
+ERROR 2025-02-11 01:49:10,058 log Internal Server Error: /api/results/
+ERROR 2025-02-11 01:50:26,950 log Internal Server Error: /api/submit/
+ERROR 2025-02-11 01:50:26,951 log Internal Server Error: /api/submit/
+ERROR 2025-02-11 01:50:27,000 views Error computing results: Cannot resolve keyword 'answer' into field. Choices are: answer_value, id, question, question_id, session, session_id
+ERROR 2025-02-11 01:50:27,000 log Internal Server Error: /api/results/
+ERROR 2025-02-11 01:50:27,137 log Internal Server Error: /api/submit/
+ERROR 2025-02-11 01:50:36,422 log Internal Server Error: /api/submit/
+ERROR 2025-02-11 01:50:36,423 log Internal Server Error: /api/submit/
+ERROR 2025-02-11 01:50:36,469 views Error computing results: Cannot resolve keyword 'answer' into field. Choices are: answer_value, id, question, question_id, session, session_id
+ERROR 2025-02-11 01:50:36,469 log Internal Server Error: /api/results/
+ERROR 2025-02-11 01:50:36,605 log Internal Server Error: /api/submit/
+ERROR 2025-02-11 01:54:17,326 log Internal Server Error: /api/submit/
+ERROR 2025-02-11 01:54:17,327 log Internal Server Error: /api/submit/
+ERROR 2025-02-11 01:54:17,373 views Error computing results: Cannot resolve keyword 'answer' into field. Choices are: answer_value, id, question, question_id, session, session_id
+ERROR 2025-02-11 01:54:17,373 log Internal Server Error: /api/results/
+ERROR 2025-02-11 01:54:17,503 views Error computing results: ['“invalid_uuid” is not a valid UUID.']
+ERROR 2025-02-11 01:54:17,503 log Internal Server Error: /api/results/
+ERROR 2025-02-11 01:54:17,547 log Internal Server Error: /api/submit/
