@@ -9,22 +9,24 @@ load_dotenv()
 RENDER = os.getenv("RENDER", "False").lower() == "true"
 
 # Database configuration
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///db.sqlite3")
+import os
+import dj_database_url
 
-if RENDER:  # If running on Render, use PostgreSQL
+DATABASE_URL = os.getenv("DATABASE_URL")  # Get from environment variables
+
+if DATABASE_URL:
     DATABASES = {
         "default": dj_database_url.parse(DATABASE_URL, conn_max_age=600)
     }
-else:  # Local development uses SQLite
+else:
+    # Use SQLite as a fallback
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
-            "NAME": os.path.join(os.path.dirname(__file__), "db.sqlite3"),
+            "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
         }
     }
-
-print(f"🔧 Running in {'Render' if RENDER else 'Local'} Mode")
-print(f"📦 Database: {DATABASE_URL}")
 
 try:
     from dotenv import load_dotenv
