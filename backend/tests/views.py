@@ -1,11 +1,16 @@
+import json
+import logging
+import numpy as np
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Avg
-import numpy as np
-import json
+from django.views.decorators.http import require_http_methods
 
-from tests.models import Question, Response, Session
+from .models import Question, Response, Session
+
+# Configure logging for better debugging
+logger = logging.getLogger(__name__)
 
 # ✅ Full Scoring Keys - Ensure all 203 scales are included
 SCORING_KEYS = {
@@ -107,74 +112,125 @@ SCORING_KEYS = {
     "Leadership": [101, 4, 89, 118, 163],
 }
 
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.core.exceptions import ObjectDoesNotExist
-import json
-
-from tests.models import Question, Response, Session
-
-# ✅ Get all questions (handles errors)
+@require_http_methods(["GET"])
 def get_questions(request):
+    """Retrieve all questions"""
     try:
-        questions = list(Question.objects.all().order_by("id").values("id", "text"))
-        return JsonResponse({"questions": questions}, safe=False)
+        questions = list(Question.objects.values("id", "text"))
+        return JsonResponse({"questions": questions})
     except Exception as e:
-        return JsonResponse({"error": f"Failed to fetch questions: {str(e)}"}, status=500)
+        logger.error(f"Error retrieving questions: {e}")
+        return JsonResponse({"error": "Failed to fetch questions"}, status=500)
 
-# ✅ Submit responses (handles errors)
-@csrf_exempt
+
+@require_http_methods(["GET"])
+def get_question_by_id(request, question_id):
+    """Retrieve a single question by ID"""
+    try:
+        question = Question.objects.get(id=question_id)
+        return JsonResponse({"id": question.id, "text": question.text})
+    except ObjectDoesNotExist:
+        return JsonResponse({"error": "Question not found"}, status=404)
+    except Exception as e:
+        logger.error(f"Error retrieving question {question_id}: {e}")
+        return JsonResponse({"error": "Internal server error"}, status=500)
+
+
+@csrf_exempt  # Required for API calls without CSRF tokens (e.g., frontend JavaScript)
+@require_http_methods(["POST"])
 def submit_responses(request):
-    if request.method != "POST":
-        return JsonResponse({"error": "Invalid request method"}, status=400)
-
+    """Receive and save user responses"""
     try:
         data = json.loads(request.body)
         session_id = data.get("session_id")
-        responses = data.get("responses")
+        responses = data.get("responses", [])
 
-        if not session_id or not isinstance(responses, list):
-            return JsonResponse({"error": "Invalid data format"}, status=400)
+        if not session_id or not responses:
+            return JsonResponse({"error": "Missing session ID or responses"}, status=400)
 
-        session, _ = Session.objects.get_or_create(session_id=session_id)
-
-        for response in responses:
-            question_id = response.get("question_id")
-            score = response.get("score")
-
-            if not question_id or score is None:
-                continue
-
-            question = Question.objects.get(id=question_id)
-            Response.objects.update_or_create(session=session, question=question, defaults={"score": score})
+        # Bulk insert for performance optimization
+        response_objects = [
+            Response(session_id=session_id, question_id=resp["question_id"], answer=resp["answer"])
+            for resp in responses
+        ]
+        Response.objects.bulk_create(response_objects)
 
         return JsonResponse({"message": "Responses saved successfully"})
 
-    except ObjectDoesNotExist:
-        return JsonResponse({"error": "Invalid question ID"}, status=400)
     except json.JSONDecodeError:
-        return JsonResponse({"error": "Invalid JSON format"}, status=400)
+        return JsonResponse({"error": "Invalid JSON data"}, status=400)
     except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+        logger.error(f"Error saving responses: {e}")
+        return JsonResponse({"error": "Failed to save responses"}, status=500)
 
-# ✅ Get results (handles errors)
-@csrf_exempt
+
+@require_http_methods(["GET"])
 def get_results(request):
-    if request.method != "POST":
-        return JsonResponse({"error": "Invalid request method"}, status=400)
-
+    """Compute user results based on responses"""
     try:
-        data = json.loads(request.body)
-        session_id = data.get("session_id")
-
+        session_id = request.GET.get("session_id")
         if not session_id:
-            return JsonResponse({"error": "Missing session_id"}, status=400)
+            return JsonResponse({"error": "Session ID required"}, status=400)
 
-        percentiles = calculate_scores(session_id)
+        responses = Response.objects.filter(session_id=session_id).values("question_id", "answer")
+        if not responses.exists():
+            return JsonResponse({"error": "No responses found"}, status=404)
 
-        return JsonResponse({"percentiles": percentiles})
+        # Compute scores based on SCORING_KEYS
+        scores = {}
+        for trait, question_ids in SCORING_KEYS.items():
+            trait_responses = [resp["answer"] for resp in responses if resp["question_id"] in question_ids]
+            if trait_responses:
+                scores[trait] = round(np.mean(trait_responses), 2)
 
-    except json.JSONDecodeError:
-        return JsonResponse({"error": "Invalid JSON format"}, status=400)
+        return JsonResponse({"session_id": session_id, "scores": scores})
+
     except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+        logger.error(f"Error computing results: {e}")
+        return JsonResponse({"error": "Failed to compute results"}, status=500)
+
+
+@require_http_methods(["DELETE"])
+def delete_response(request, response_id):
+    """Delete a specific response by ID (admin use)"""
+    try:
+        response = Response.objects.get(id=response_id)
+        response.delete()
+        return JsonResponse({"message": "Response deleted successfully"})
+    except ObjectDoesNotExist:
+        return JsonResponse({"error": "Response not found"}, status=404)
+    except Exception as e:
+        logger.error(f"Error deleting response {response_id}: {e}")
+        return JsonResponse({"error": "Failed to delete response"}, status=500)
+
+        from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+from .models import Question, Response
+
+@csrf_exempt
+def submit_responses(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+
+            session_id = data.get("session_id")
+            responses = data.get("responses")
+
+            if not session_id or not responses:
+                return JsonResponse({"error": "Missing session ID or responses"}, status=400)
+
+            for response in responses:
+                question_id = response.get("question_id")
+                answer = response.get("answer")
+
+                question = Question.objects.filter(id=question_id).first()
+                if not question:
+                    return JsonResponse({"error": "Invalid question ID"}, status=400)
+
+                Response.objects.create(session_id=session_id, question=question, answer_value=answer)
+
+            return JsonResponse({"message": "Responses submitted successfully"}, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
