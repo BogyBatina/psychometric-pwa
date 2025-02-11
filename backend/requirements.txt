@@ -15,4 +15,4 @@ zope.event==5.0
 zope.interface==7.2
 whitenoise
 dj-database-url
-dj-database-url
+python-dotenv
