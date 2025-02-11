@@ -13,3 +13,4 @@ sqlparse==0.5.3
 tzdata==2025.1
 zope.event==5.0
 zope.interface==7.2
+dj-database-url
