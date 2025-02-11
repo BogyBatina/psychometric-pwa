@@ -25,3 +25,10 @@ else:  # Local development uses SQLite
 
 print(f"🔧 Running in {'Render' if RENDER else 'Local'} Mode")
 print(f"📦 Database: {DATABASE_URL}")
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # Ignore error in production
+
